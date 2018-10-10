@@ -14,6 +14,7 @@ window option.
 
 ## Development Notes
 
+**Note:** This app has been updated to use Rally App Builder as its preferred build/run tool.  The instructions below referencing grunt have been left for historical purposes, but in general should not be used any longer.
 
 ### First Load
 
