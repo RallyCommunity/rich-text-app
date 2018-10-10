@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rich Text App</title>
+
+    <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+                /**
+ * A link that pops up a version dialog box
+ */
+
+Ext.define('Rally.technicalservices.InfoLink',{
+    extend: 'Rally.ui.dialog.Dialog',
+    alias: 'widget.tsinfolink',
+
+    /**
+     * @cfg {String} informationHtml
+     * Additional text to be displayed on the popup dialog (for exmaple,
+     * to add a description of the app's use or functionality)
+     */
+    informationHtml: null,
+
+    /**
+     *
+     * cfg {String} title
+     * The title for the dialog box
+     */
+    title: "Build Information",
+
+    defaults: { padding: 5, margin: 5 },
+
+    closable: true,
+
+    draggable: true,
+
+    autoShow: true,
+
+    width: 350,
+
+    informationalConfig: null,
+
+    showLog: false,
+    logger: null,
+
+    items: [
+        {xtype:'container', itemId:'information' },
+        {xtype:'container', itemId:'button_box'}
+    ],
+
+    initComponent: function() {
+        var id = Ext.id(this);
+        this.title =  "<span class='icon-help'> </span>" + this.title;
+        this.callParent(arguments);
+    },
+
+    _generateChecksum: function(string){
+        var chk = 0x12345678,
+            i;
+        string = string.replace(/var CHECKSUM = .*;/,"");
+        string = string.replace(/var BUILDER  = .*;/,"");
+        string = string.replace(/\s/g,"");  //Remove all whitespace from the string.
+
+        for (i = 0; i < string.length; i++) {
+            chk += (string.charCodeAt(i) * i);
+        }
+
+        return chk;
+    },
+
+    _checkChecksum: function(container) {
+        var deferred = Ext.create('Deft.Deferred');
+        var me = this;
+
+        Ext.Ajax.request({
+            url: document.URL,
+            params: {
+                id: 1
+            },
+            success: function (response) {
+                text = response.responseText;
+                if ( CHECKSUM ) {
+                    var stored_checksum = me._generateChecksum(text);
+                    if ( CHECKSUM !== stored_checksum ) {
+                        deferred.resolve(false);
+                        return;
+                    }
+                }
+                deferred.resolve(true);
+            }
+        });
+
+        return deferred.promise;
+    },
+
+    _addToContainer: function(container){
+        var config = Ext.apply({
+            xtype:'container',
+            height: 200,
+            overflowY: true
+        }, this.informationalConfig);
+
+        container.add(config);
+    },
+
+    afterRender: function() {
+        var app = Rally.getApp();
+
+        if ( !Ext.isEmpty( this.informationalConfig ) ) {
+            var container = this.down('#information');
+            this._addToContainer(container);
+        }
+
+        if ( this.showLog && this.logger ) {
+            this.down('#button_box').add({
+                xtype:'rallybutton',
+                text:'Show Log',
+                listeners: {
+                    scope: this,
+                    click: function() {
+                        this.logger.displayLog();
+                    }
+                }
+            });
+        }
+
+        if (! app.isExternal() ) {
+            this._checkChecksum(app).then({
+                scope: this,
+                success: function(result){
+                    if ( !result ) {
+                        this.addDocked({
+                            xtype:'container',
+                            cls: 'build-info',
+                            dock: 'bottom',
+                            padding: 2,
+                            html:'<span class="icon-warning"> </span>Checksums do not match'
+                        });
+                    }
+                },
+                failure: function(msg){
+                    console.log("oops:",msg);
+                }
+            });
+        } else {
+            this.addDocked({
+                xtype:'container',
+                cls: 'build-info',
+                padding: 2,
+                dock: 'bottom',
+                html:'... Running externally'
+            });
+        }
+        this.callParent(arguments);
+    },
+
+    beforeRender: function() {
+        var me = this;
+        this.callParent(arguments);
+
+        if (this.informationHtml) {
+            this.addDocked({
+                xtype: 'component',
+                componentCls: 'intro-panel',
+                padding: 2,
+                html: this.informationHtml,
+                dock: 'bottom'
+            });
+        }
+
+        this.addDocked({
+            xtype:'container',
+            cls: 'build-info',
+            padding: 2,
+            dock:'bottom',
+            html:"This app was created by the CA AC Technical Services Team."
+        });
+
+        if ( APP_BUILD_DATE ) {
+            var build_html = Ext.String.format("Built on: {0} <br/>Built by: {1}",
+                APP_BUILD_DATE,
+                BUILDER);
+
+            if ( ARTIFACT ) {
+                build_html = build_html + "<br/>Source artifact: " + ARTIFACT;
+            }
+
+            this.addDocked({
+                xtype:'container',
+                cls: 'build-info',
+                padding: 2,
+                dock: 'top',
+                html: build_html
+            });
+        }
+    }
+});
+
+                /*
+ * originally written for when we supported older versions of IE that wouldn't
+ * deal with console.log.
+ *
+ * Now allows for saving log.
+ */
+Ext.define('CArABU.technicalservices.Logger',{
+
+    saveForLater: false,
+    saveLines: 100,
+    logArray: [],
+
+    constructor: function(config){
+        Ext.apply(this,config);
+    },
+
+    setSaveForLater: function(saveme){
+        this.saveForLater = saveme;
+    },
+
+    log: function(args){
+        var timestamp = "[ " + Ext.util.Format.date(new Date(), "Y-m-d H:i:s.u") + " ]";
+
+        var output_args = [];
+        output_args = Ext.Array.push(output_args,[timestamp]);
+        output_args = Ext.Array.push(output_args, Ext.Array.slice(arguments,0));
+
+        if ( this.saveForLater ) {
+            if ( !this.logArray) {
+                this.logArray = [];
+            }
+            this.logArray.push(output_args.join(' '));
+
+            if ( this.logArray.length > this.saveLines ) {
+                this.logArray.shift();
+            }
+        }
+
+        window.console && console.log.apply(console,output_args);
+    },
+
+    getLogText: function() {
+        if ( ! this.logArray || this.logArray.length === 0 ) { return "-- no log --"; }
+        return this.logArray.join('<br/>');
+    } ,
+
+    displayLog: function() {
+        var text = this.getLogText();
+
+        this.popup = Ext.create('Rally.ui.dialog.Dialog', {
+            width      : Ext.getBody().getWidth() - 20,
+            height     : Ext.getBody().getHeight() - 20,
+            closable   : true,
+            title      : 'Log',
+            autoShow   : true,
+            layout     : 'border',
+            defaults   : {
+                layout : 'fit',
+                width  : '50%',
+                border : false
+            },
+            items: [{
+                region : 'center',
+                xtype: 'container',
+                html: text,
+                autoScroll: true
+            }]
+        });
+    }
+});
+
+                Ext.define('TSUtilities', {
+
+    singleton: true,
+
+    loadWsapiRecords: function(config){
+        var deferred = Ext.create('Deft.Deferred');
+        var default_config = {
+            model: 'Defect',
+            fetch: ['ObjectID']
+        };
+        Ext.create('Rally.data.wsapi.Store', Ext.Object.merge(default_config,config)).load({
+            callback : function(records, operation, successful) {
+                if (successful){
+                    deferred.resolve(records);
+                } else {
+                    console.error("Failed: ", operation);
+                    deferred.reject('Problem loading: ' + operation.error.errors.join('. '));
+                }
+            }
+        });
+        return deferred.promise;
+    },
+
+    loadAStoreWithAPromise: function(model_name, model_fields){
+        var deferred = Ext.create('Deft.Deferred');
+
+        Ext.create('Rally.data.wsapi.Store', {
+            model: model_name,
+            fetch: model_fields
+        }).load({
+            callback : function(records, operation, successful) {
+                if (successful){
+                    deferred.resolve(this);
+                } else {
+                    console.error("Failed: ", operation);
+                    deferred.reject('Problem loading: ' + operation.error.errors.join('. '));
+                }
+            }
+        });
+        return deferred.promise;
+    }
+});
+
+                Ext.define("CArABU.app.RichTextApp", {
+    extend: 'Rally.app.App',
+    componentCls: 'app',
+    defaults: { padding: 10 },
+    layout: 'fit',
+
+    config: {
+        defaultSettings: {
+           html: '<em>Use the gear to change display text...</em>'
+        }
+    },
+
+    integrationHeaders : {
+        name : "CArABU.app.TSApp"
+    },
+
+    launch: function() {
+
+      this.removeAll();
+      var html = this.getSetting('html');
+
+      this.add({
+         xtype: 'component',
+         html: html,
+         cls: 'default-counter'
+      });
+    },
+    getSettingsFields: function() {
+
+        return [{
+            xtype:'container',
+            margin: '10 70 0 60',
+            html:'<div class="variable-label">Display Text</div>'
+        },{
+            name:'html',
+            flex: 1,
+            xtype:'rallyrichtexteditor',
+            margin: '10 70 0 60',
+            fieldLabel: 'Informational Text',
+            _createResizer: function(){}, //This is an override so that the resizer handle which is hardcoded in the component doesn't hide the last line of the editor.
+            resizeable: false
+        }];
+
+    },
+
+    getOptions: function() {
+        var options = [
+            {
+                text: 'About...',
+                handler: this._launchInfo,
+                scope: this
+            }
+        ];
+
+        return options;
+    },
+
+    _launchInfo: function() {
+        if ( this.about_dialog ) { this.about_dialog.destroy(); }
+
+        this.about_dialog = Ext.create('Rally.technicalservices.InfoLink',{
+            showLog: this.getSetting('saveLog'),
+            logger: this.logger
+        });
+    },
+
+    isExternal: function(){
+        return typeof(this.getAppId()) == 'undefined';
+    }
+
+});
+
+
+            Rally.launchApp('CArABU.app.RichTextApp', {
+                name:"Rich Text App",
+                parentRepos:"",
+                version:"0.2.1"
+            });
+
+        });
+    </script>
+
+
+
+    <style type="text/css">
+        .tsinfolink {
+  position: absolute;
+  right: 0px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  text-align: center;
+  color: white;
+  background: #C0C0C0;
+  border-style: solid;
+  border-width: 1px;
+  margin-top: 25px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+.variable-label {
+  font-family: ProximaNovaSemiBold, Helvetica, Arial;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+.default-counter {
+  font-family: ProximaNova, Helvetica, Arial;
+  font-size: 14px;
+}
+
+    </style>
+</head>
+<body>
+</body>
+</html>

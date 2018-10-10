@@ -1,7 +1,7 @@
 {
   "_comment": "This file is used by grunt",
-  "name": "tsabc",
-  "version": "0.2.0",
+  "name": "RichTextApp",
+  "version": "0.2.1",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~1.0.1",

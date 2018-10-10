@@ -1,7 +1,15 @@
 {
     "name": "Rich Text App",
     "sdk": "2.1",
-    "version": "0.1",
     "className": "CArABU.app.RichTextApp",
-    "artifact": "F387"
+    "artifact": "F387",
+    "javascript": [
+        "src/javascript/utils/__ts-info-link.js",
+        "src/javascript/utils/__ts-logger.js",
+        "src/javascript/utils/__ts-utilities.js",
+        "src/javascript/app.js"
+    ],
+    "css": [
+        "src/style/app.css"
+    ]
 }

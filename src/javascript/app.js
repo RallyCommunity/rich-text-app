@@ -1,7 +1,7 @@
 Ext.define("CArABU.app.RichTextApp", {
     extend: 'Rally.app.App',
     componentCls: 'app',
-    defaults: { margin: 10 },
+    defaults: { padding: 10 },
     layout: 'fit',
 
     config: {
@@ -20,7 +20,7 @@ Ext.define("CArABU.app.RichTextApp", {
       var html = this.getSetting('html');
 
       this.add({
-         xtype:'container',
+         xtype: 'component',
          html: html,
          cls: 'default-counter'
       });
