@@ -43,18 +43,6 @@ Ext.define("CArABU.app.RichTextApp", {
 
     },
 
-    getOptions: function() {
-        var options = [
-            {
-                text: 'About...',
-                handler: this._launchInfo,
-                scope: this
-            }
-        ];
-
-        return options;
-    },
-
     _launchInfo: function() {
         if ( this.about_dialog ) { this.about_dialog.destroy(); }
 
@@ -67,5 +55,4 @@ Ext.define("CArABU.app.RichTextApp", {
     isExternal: function(){
         return typeof(this.getAppId()) == 'undefined';
     }
-
 });

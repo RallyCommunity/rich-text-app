@@ -356,18 +356,6 @@ Ext.define('CArABU.technicalservices.Logger',{
 
     },
 
-    getOptions: function() {
-        var options = [
-            {
-                text: 'About...',
-                handler: this._launchInfo,
-                scope: this
-            }
-        ];
-
-        return options;
-    },
-
     _launchInfo: function() {
         if ( this.about_dialog ) { this.about_dialog.destroy(); }
 
@@ -380,14 +368,13 @@ Ext.define('CArABU.technicalservices.Logger',{
     isExternal: function(){
         return typeof(this.getAppId()) == 'undefined';
     }
-
 });
 
 
             Rally.launchApp('CArABU.app.RichTextApp', {
                 name:"Rich Text App",
                 parentRepos:"",
-                version:"0.2.1"
+                version:"0.2.2"
             });
 
         });
