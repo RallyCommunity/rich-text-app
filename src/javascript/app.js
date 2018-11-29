@@ -38,8 +38,7 @@ Ext.define("CArABU.app.RichTextApp", {
             margin: '10 70 0 60',
             fieldLabel: 'Informational Text',
             _createResizer: function(){}, //This is an override so that the resizer handle which is hardcoded in the component doesn't hide the last line of the editor.
-            resizeable: false,
-            readyEvent: 'afterrender'
+            resizeable: false
         }];
 
     },
