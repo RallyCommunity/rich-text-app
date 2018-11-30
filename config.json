@@ -7,6 +7,7 @@
         "src/javascript/utils/__ts-info-link.js",
         "src/javascript/utils/__ts-logger.js",
         "src/javascript/utils/__ts-utilities.js",
+        "src/javascript/RichTextEditorSettingsField.js",
         "src/javascript/app.js"
     ],
     "css": [
