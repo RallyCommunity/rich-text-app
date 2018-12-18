@@ -375,9 +375,14 @@ Ext.define('CArABU.technicalservices.Logger',{
       this.add({
          xtype: 'component',
          html: html,
-         cls: 'default-counter'
+         cls: 'default-counter',
+         listeners: {
+             afterrender: this._setLinkTargets,
+             scope: this
+         }
       });
     },
+
     getSettingsFields: function() {
 
         return [{
@@ -408,6 +413,12 @@ Ext.define('CArABU.technicalservices.Logger',{
         });
     },
 
+    _setLinkTargets: function(cmp) {
+        _.each(Ext.dom.Query.select('a', cmp.getEl().dom), function(a) {
+            a.target = '_blank';
+        });
+    },
+
     isExternal: function(){
         return typeof(this.getAppId()) == 'undefined';
     }
@@ -417,7 +428,7 @@ Ext.define('CArABU.technicalservices.Logger',{
             Rally.launchApp('CArABU.app.RichTextApp', {
                 name:"Rich Text App",
                 parentRepos:"",
-                version:"0.2.6"
+                version:"0.2.7"
             });
 
         });

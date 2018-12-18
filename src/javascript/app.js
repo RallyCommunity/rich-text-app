@@ -22,9 +22,14 @@ Ext.define("CArABU.app.RichTextApp", {
       this.add({
          xtype: 'component',
          html: html,
-         cls: 'default-counter'
+         cls: 'default-counter',
+         listeners: {
+             afterrender: this._setLinkTargets,
+             scope: this
+         }
       });
     },
+
     getSettingsFields: function() {
 
         return [{
@@ -52,6 +57,12 @@ Ext.define("CArABU.app.RichTextApp", {
         this.about_dialog = Ext.create('Rally.technicalservices.InfoLink',{
             showLog: this.getSetting('saveLog'),
             logger: this.logger
+        });
+    },
+
+    _setLinkTargets: function(cmp) {
+        _.each(Ext.dom.Query.select('a', cmp.getEl().dom), function(a) {
+            a.target = '_blank';
         });
     },
 
